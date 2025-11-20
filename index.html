@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>IAPant Studio V2 (Fichiers PDF / Office)</title>
+  <style>
+    :root {
+      --bg-dark: #0f1020;
+      --bg-card: #181828;
+      --color-text: #f5f5f5;
+      --color-border: #333;
+      --color-primary: #5b5bff;
+      --color-primary-hover: #7777ff;
+      --color-user: #2f3b80;
+      --color-bot: #252547;
+      --color-thinking: #443322;
+      --color-error: #ff5555;
+    }
+
+    body.light-theme {
+      --bg-dark: #f5f5f8;
+      --bg-card: #ffffff;
+      --color-text: #111;
+      --color-border: #ddd;
+      --color-user: #dbeafe;
+      --color-bot: #e5e7eb;
+      --color-thinking: #fef3c7;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-dark);
+      color: var(--color-text);
+      display: flex;
+      justify-content: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      width: 95%;
+      max-width: 900px;
+      background: var(--bg-card);
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.5);
+    }
+    h1 { margin: 0 0 5px 0; }
+    h2 { margin: 15px 0 8px; font-size: 18px; color: var(--color-primary); }
+
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .container { padding: 15px; }
+      h1 { font-size: 20px; }
+      h2 { font-size: 16px; }
+    }
+
+    form { display: flex; gap: 8px; margin-top: 10px; }
+    input[type="text"], textarea {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      background: var(--bg-dark);
+      color: var(--color-text);
+      outline: none;
+      font-family: inherit;
+      font-size: 14px;
+      resize: none;
+    }
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      background: var(--color-primary);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+      transition: background 0.3s, transform 0.1s;
+    }
+    button:hover:not(:disabled) { 
+      background: var(--color-primary-hover); 
+      transform: translateY(-1px);
+    }
+    button:disabled { 
+      background: #444; 
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    #chat {
+      height: 400px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      border: 1px solid var(--color-border);
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .bubble {
+      max-width: 85%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      font-size: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    .bubble .meta {
+      font-size: 10px;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+    .user { 
+      background: var(--color-user); 
+      align-self: flex-end; 
+      border-bottom-right-radius: 2px;
+    }
+    .assistant { 
+      background: var(--color-bot); 
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+    .thinking {
+      background: var(--color-thinking);
+      color: #ddd;
+      font-style: italic;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #aaaaaa;
+      margin-top: 15px;
+      border-top: 1px dashed var(--color-border);
+      padding-top: 10px;
+    }
+    body.light-theme .small { color: #555; }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .top-left {
+      min-width: 200px;
+    }
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .clear-btn, .file-clear-btn, .toolbar-btn {
+      font-size: 12px;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background: #444;
+      color: #fff;
+      cursor: pointer;
+    }
+    .clear-btn:hover, .file-clear-btn:hover, .toolbar-btn:hover { background: #666; }
+
+    .section {
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid var(--color-border);
+    }
+    label { 
+      font-size: 13px; 
+      display: block; 
+      margin-bottom: 5px;
+    }
+    #fileStatus, #imageStatus {
+      font-size: 12px;
+      color: #cccccc;
+      margin-top: 8px;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    body.light-theme #fileStatus,
+    body.light-theme #imageStatus {
+      color: #444;
+    }
+
+    .file-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    #imageResult img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 15px;
+      border: 1px solid var(--color-border);
+      display: block;
+    }
+    .error-message {
+      color: var(--color-error);
+      font-weight: bold;
+    }
+
+    .model-select {
+      margin-top: 6px;
+      font-size: 12px;
+    }
+    .model-select select {
+      background: var(--bg-dark);
+      color: var(--color-text);
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      padding: 3px 6px;
+      font-size: 12px;
+    }
+    body.light-theme .model-select select {
+      background: #f9fafb;
+      color: #111;
+    }
+  </style>
+
+  <!-- Librairies pour les fichiers PDF / Office -->
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- JSZip pour DOCX / PPTX / etc. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- SheetJS (XLSX) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="top-bar">
+    <div class="top-left">
+      <h1>IAPant Studio V2</h1>
+      <div style="font-size:13px;color:#ccc;">Chat IA, Contexte par Fichier, Génération d'Images</div>
+      <div id="key-warning" class="error-message" style="margin-top:5px; display:none;">
+        ⚠️ CLÉ OPENAI MANQUANTE. Veuillez l'ajouter dans le code source (en local).
+      </div>
+      <div class="model-select">
+        Modèle texte :
+        <select id="modelSelect">
+          <option value="gpt-4o-mini" selected>gpt-4o-mini (rapide)</option>
+          <option value="gpt-4o">gpt-4o (plus puissant)</option>
+        </select>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="exportChat" class="toolbar-btn">💾 Exporter le chat</button>
+      <button id="themeToggle" class="toolbar-btn">🌙 / ☀️</button>
+      <button id="clearChat" class="clear-btn">🧹 Effacer l'historique</button>
+    </div>
+  </div>
+
+  <h2>💬 Chat (Modèle: <span id="modelLabel">gpt-4o-mini</span>)</h2>
+  <div id="chat"></div>
+  <form id="chatForm">
+    <input type="text" id="message" placeholder="Écris ton message..." autocomplete="off">
+    <button type="submit">Envoyer</button>
+  </form>
+
+  <div class="section">
+    <h2>📂 Contexte de Fichier (Texte, PDF, Office)</h2>
+    <label for="fileInput">
+      Fichiers supportés : .txt, .md, .json, .pdf, .docx, .xlsx, .xls, .pptx, .ppt
+    </label>
+    <div class="file-container">
+      <input 
+        type="file" 
+        id="fileInput" 
+        accept=".txt,.md,.json,.pdf,.docx,.xlsx,.xls,.pptx,.ppt"
+      >
+      <button id="clearFile" class="file-clear-btn" style="display:none;">Oublier le Fichier</button>
+    </div>
+    <div id="fileStatus">Aucun fichier chargé.</div>
+  </div>
+
+  <div class="section">
+    <h2>🖼️ Création d'Images (dall-e-3)</h2>
+    <form id="imageForm">
+      <textarea id="imagePrompt" rows="2" placeholder="Décris l'image que tu veux créer (ex : un logo minimaliste bleu avec un cerveau futuriste)..."></textarea>
+      <button type="submit">Générer l'image</button>
+    </form>
+    <div id="imageStatus">Aucune image générée pour l'instant.</div>
+    <div id="imageResult"></div>
+  </div>
+
+  <div class="small">
+    ✅ Utilise l'API standard <code>v1/chat/completions</code>.<br>
+    ✅ Historique géré localement (localStorage) + export possible.<br>
+    ✅ Lecture locale des fichiers PDF / Office et conversion en texte (jusqu'à 8000 caractères).<br>
+    ⚠️ Pour un site public, mets la clé API sur un serveur, pas dans ce fichier HTML.
+  </div>
+</div>
+
+<script>
+  // PDF.js worker
+  if (window['pdfjsLib']) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+
+  // -------------------------------------
+  // 🔑 CLÉ API OPENAI
+  // -------------------------------------
+  // ATTENTION : ne mets ta vraie clé ici que pour des tests EN LOCAL.
+ let OPENAI_API_KEY = "";
+
+
+  let CHAT_MODEL = "gpt-4o-mini";
+  const IMAGE_MODEL = "dall-e-3";
+  const MAX_FILE_TOKENS = 8000; // Limite de caractères envoyés à l'IA
+  const MAX_HISTORY_MESSAGES = 10;
+
+  const chat = document.getElementById("chat");
+  const chatForm = document.getElementById("chatForm");
+  const input = document.getElementById("message");
+  const clearChatBtn = document.getElementById("clearChat");
+  const keyWarning = document.getElementById("key-warning");
+
+  const fileInput = document.getElementById("fileInput");
+  const fileStatus = document.getElementById("fileStatus");
+  const clearFileBtn = document.getElementById("clearFile");
+
+  const imageForm = document.getElementById("imageForm");
+  const imagePromptInput = document.getElementById("imagePrompt");
+  const imageStatus = document.getElementById("imageStatus");
+  const imageResult = document.getElementById("imageResult");
+
+  const exportChatBtn = document.getElementById("exportChat");
+  const themeToggleBtn = document.getElementById("themeToggle");
+  const modelSelect = document.getElementById("modelSelect");
+  const modelLabel = document.getElementById("modelLabel");
+
+  let historique = [];
+  let lastFileContent = null;
+
+  function sauverHistorique() {
+    try {
+      localStorage.setItem("iapant_historique_v2", JSON.stringify(historique));
+    } catch (e) {
+      console.error("Erreur sauvegarde historique :", e);
+    }
+  }
+
+  function ajouterMessageDOM(texte, role) {
+    const div = document.createElement("div");
+    div.className = "bubble " + role;
+    const contentSpan = document.createElement("div");
+    contentSpan.textContent = texte;
+    div.appendChild(contentSpan);
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const label = role === "user" ? "Toi" : "IAPant";
+    const time = new Date().toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"});
+    meta.textContent = label + " • " + time;
+    div.appendChild(meta);
+
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  function chargerHistorique() {
+    try {
+      const data = localStorage.getItem("iapant_historique_v2");
+      if (!data) {
+        const bienvenue = "Bonjour, je suis IAPant Studio. Pose-moi une question, ou charge un fichier (PDF, Word, Excel, PowerPoint, texte) pour que je l'utilise comme contexte.";
+        ajouterMessage(bienvenue, "assistant");
+        return;
+      }
+      historique = JSON.parse(data);
+      historique.forEach(msg => {
+        ajouterMessageDOM(msg.text, msg.role);
+      });
+    } catch (e) {
+      console.error("Erreur chargement historique :", e);
+    }
+  }
+
+  function ajouterMessage(texte, role) {
+    ajouterMessageDOM(texte, role);
+    historique.push({ role: role, text: texte });
+    sauverHistorique();
+  }
+
+  function verifierCleEtActiverControles() {
+    const cleValide = OPENAI_API_KEY && OPENAI_API_KEY.startsWith("sk-") && OPENAI_API_KEY !== "PLACEZ_VOTRE_CLE_ICI";
+
+    const isEnabled = cleValide;
+    document.getElementById("message").disabled = !isEnabled;
+    document.querySelector("#chatForm button").disabled = !isEnabled;
+    document.getElementById("imagePrompt").disabled = !isEnabled;
+    document.querySelector("#imageForm button").disabled = !isEnabled;
+    document.getElementById("fileInput").disabled = !isEnabled;
+
+    if (!cleValide) {
+      keyWarning.style.display = "block";
+      keyWarning.innerHTML = "⚠️ CLÉ OPENAI MANQUANTE. Ajoute-la dans <code>OPENAI_API_KEY</code> pour tester en local.";
+    } else {
+      keyWarning.style.display = "none";
+    }
+
+    return cleValide;
+  }
+
+  function construireMessagesAPI(userMessage) {
+    let messagesArray = [
+      {
+        role: "system",
+        content: "Tu es IAPant, un assistant francophone utile qui aide sur le business, la vidéo, l'IA et les idées de projets. Réponds de façon claire et directe, en évitant les réponses trop longues."
+      }
+    ];
+
+    if (lastFileContent) {
+      const trimmed = lastFileContent.slice(0, MAX_FILE_TOKENS);
+      messagesArray.push({
+        role: "user",
+        content:
+          `Voici le contenu d'un fichier fourni par l'utilisateur (PDF / Office / texte). ` +
+          `Utilise-le comme contexte si c'est pertinent. Le texte a été coupé à ${MAX_FILE_TOKENS} caractères.\n\n"""` +
+          `\n${trimmed}\n"""`
+      });
+    }
+
+    const historySlice = historique.slice(-MAX_HISTORY_MESSAGES);
+    historySlice.forEach(msg => {
+      let roleAPI = msg.role === "bot" ? "assistant" : msg.role;
+      if (roleAPI === "user" || roleAPI === "assistant") {
+        messagesArray.push({
+          role: roleAPI,
+          content: msg.text
+        });
+      }
+    });
+
+    messagesArray.push({ role: "user", content: userMessage });
+
+    return messagesArray;
+  }
+
+  async function appelOpenAIChat(message) {
+    if (!verifierCleEtActiverControles()) {
+      return "Erreur : Clé OpenAI non valide ou manquante.";
+    }
+
+    try {
+      const messagesAPI = construireMessagesAPI(message);
+
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + OPENAI_API_KEY
+        },
+        body: JSON.stringify({
+          model: CHAT_MODEL,
+          messages: messagesAPI
+        })
+      });
+
+      if (!response.ok) {
+        const txt = await response.text();
+        console.error("Erreur OpenAI (chat):", txt);
+        try {
+          const errorData = JSON.parse(txt);
+          return `Erreur API (${response.status}) : ${errorData.error.message || "Vérifie ta clé, ton crédit ou ta facturation."}`;
+        } catch {
+          return `Erreur OpenAI (chat) : ${response.status} - Vérifie ta clé, ton crédit ou ta facturation.`;
+        }
+      }
+
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || "Je n'ai pas pu lire la réponse de l'API.";
+    } catch (e) {
+      console.error(e);
+      return "Erreur de connexion à OpenAI (chat). Vérifie ta connexion internet.";
+    }
+  }
+
+  async function appelOpenAIImage(prompt) {
+    if (!verifierCleEtActiverControles()) {
+      throw new Error("Clé OpenAI non valide ou manquante.");
+    }
+
+    const body = {
+      model: IMAGE_MODEL,
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024",
+      response_format: "url"
+    };
+
+    const response = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + OPENAI_API_KEY
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const txt = await response.text();
+      console.error("Erreur OpenAI (image):", txt);
+      try {
+        const errorData = JSON.parse(txt);
+        throw new Error(`Erreur API (${response.status}) : ${errorData.error.message || "Vérifie ta clé, ton crédit ou le prompt."}`);
+      } catch {
+        throw new Error(`Erreur OpenAI (image) : ${response.status} - Vérifie les logs.`);
+      }
+    }
+
+    const data = await response.json();
+    const url = data.data?.[0]?.url;
+    if (!url) {
+      throw new Error("Réponse inattendue de l'API image (URL manquante).");
+    }
+    return url;
+  }
+
+  chatForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const texte = input.value.trim();
+    if (!texte) return;
+
+    ajouterMessage(texte, "user");
+    input.value = "";
+
+    const thinkingBubble = document.createElement("div");
+    thinkingBubble.className = "bubble assistant thinking";
+    const tContent = document.createElement("div");
+    tContent.textContent = "... IAPant réfléchit...";
+    thinkingBubble.appendChild(tContent);
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const time = new Date().toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"});
+    meta.textContent = "IAPant • " + time;
+    thinkingBubble.appendChild(meta);
+    chat.appendChild(thinkingBubble);
+    chat.scrollTop = chat.scrollHeight;
+
+    const reponse = await appelOpenAIChat(texte);
+
+    thinkingBubble.parentNode?.removeChild(thinkingBubble);
+    ajouterMessage(reponse, "assistant");
+  });
+
+  // -------------------------------------
+  //  FICHIERS : TEXT, PDF, DOCX, XLSX, PPTX
+  // -------------------------------------
+
+  function setFileStatusOK(fileName, charCount, truncated, typeLabel) {
+    const truncatedMsg = truncated
+      ? `⚠️ Texte coupé à ${MAX_FILE_TOKENS} caractères pour l'IA.`
+      : "Prêt à l'emploi.";
+    fileStatus.textContent =
+      `Fichier chargé (${typeLabel}) : ${fileName} (${charCount} caractères). ${truncatedMsg}`;
+    clearFileBtn.style.display = "inline-block";
+  }
+
+  function setFileStatusError(message) {
+    lastFileContent = null;
+    fileStatus.textContent = "Erreur fichier : " + message;
+    clearFileBtn.style.display = "none";
+  }
+
+  // --- TEXT (txt, md, json) ---
+  function lireFichierTexte(file) {
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      lastFileContent = String(evt.target.result || "");
+      const truncated = lastFileContent.length > MAX_FILE_TOKENS;
+      setFileStatusOK(file.name, lastFileContent.length, truncated, "Texte");
+    };
+    reader.onerror = function() {
+      setFileStatusError("Impossible de lire le fichier texte.");
+    };
+    reader.readAsText(file, "utf-8");
+  }
+
+  // --- PDF ---
+  function lirePDF(file) {
+    if (!window['pdfjsLib']) {
+      setFileStatusError("PDF.js non chargé. Vérifie ta connexion internet.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const typedarray = new Uint8Array(evt.target.result);
+      pdfjsLib.getDocument({ data: typedarray }).promise
+        .then(async function(pdf) {
+          let textContent = "";
+          const maxPages = Math.min(pdf.numPages, 20); // limite de pages pour ne pas exploser
+          for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const text = await page.getTextContent();
+            const pageText = text.items.map(item => item.str).join(" ");
+            textContent += pageText + "\n\n";
+            if (textContent.length > MAX_FILE_TOKENS * 1.5) break;
+          }
+          lastFileContent = textContent;
+          const truncated = lastFileContent.length > MAX_FILE_TOKENS;
+          setFileStatusOK(file.name, lastFileContent.length, truncated, "PDF");
+        })
+        .catch(err => {
+          console.error(err);
+          setFileStatusError("Erreur lors de la lecture du PDF.");
+        });
+    };
+    reader.onerror = function() {
+      setFileStatusError("Impossible de lire le fichier PDF.");
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // --- DOCX (Word) via JSZip + XML ---
+  function lireDOCX(file) {
+    if (!window['JSZip']) {
+      setFileStatusError("JSZip non chargé (DOCX).");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      JSZip.loadAsync(evt.target.result)
+        .then(zip => {
+          const docFile = zip.file("word/document.xml");
+          if (!docFile) throw new Error("document.xml introuvable");
+          return docFile.async("string");
+        })
+        .then(xmlText => {
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(xmlText, "application/xml");
+          const nodes = xml.getElementsByTagName("w:t");
+          let text = "";
+          for (let i = 0; i < nodes.length; i++) {
+            text += nodes[i].textContent + " ";
+            if (text.length > MAX_FILE_TOKENS * 1.5) break;
+          }
+          lastFileContent = text;
+          const truncated = lastFileContent.length > MAX_FILE_TOKENS;
+          setFileStatusOK(file.name, lastFileContent.length, truncated, "Word (DOCX)");
+        })
+        .catch(err => {
+          console.error(err);
+          setFileStatusError("Erreur lors de la lecture du DOCX.");
+        });
+    };
+    reader.onerror = function() {
+      setFileStatusError("Impossible de lire le fichier DOCX.");
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // --- PPTX (PowerPoint) via JSZip + XML ---
+  function lirePPTX(file) {
+    if (!window['JSZip']) {
+      setFileStatusError("JSZip non chargé (PPTX).");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      JSZip.loadAsync(evt.target.result)
+        .then(async zip => {
+          const slidesFolder = zip.folder("ppt/slides");
+          if (!slidesFolder) throw new Error("Dossier des slides introuvable");
+          const files = [];
+          zip.forEach((relPath, fileEntry) => {
+            if (relPath.startsWith("ppt/slides/slide") && relPath.endsWith(".xml")) {
+              files.push(fileEntry);
+            }
+          });
+          files.sort((a, b) => a.name.localeCompare(b.name));
+          let text = "";
+          for (const f of files) {
+            const xmlText = await f.async("string");
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(xmlText, "application/xml");
+            const nodes = xml.getElementsByTagName("a:t");
+            for (let i = 0; i < nodes.length; i++) {
+              text += nodes[i].textContent + " ";
+              if (text.length > MAX_FILE_TOKENS * 1.5) break;
+            }
+            text += "\n\n";
+            if (text.length > MAX_FILE_TOKENS * 1.5) break;
+          }
+          lastFileContent = text;
+          const truncated = lastFileContent.length > MAX_FILE_TOKENS;
+          setFileStatusOK(file.name, lastFileContent.length, truncated, "PowerPoint (PPTX)");
+        })
+        .catch(err => {
+          console.error(err);
+          setFileStatusError("Erreur lors de la lecture du PPTX.");
+        });
+    };
+    reader.onerror = function() {
+      setFileStatusError("Impossible de lire le fichier PPTX.");
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // --- XLSX / XLS (Excel) via SheetJS ---
+  function lireXLSX(file) {
+    if (!window['XLSX']) {
+      setFileStatusError("XLSX non chargé (Excel).");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        let text = "";
+        workbook.SheetNames.forEach(sheetName => {
+          const sheet = workbook.Sheets[sheetName];
+          const csv = XLSX.utils.sheet_to_csv(sheet, { FS: " ", RS: "\n" });
+          text += `--- Feuille: ${sheetName} ---\n` + csv + "\n\n";
+          if (text.length > MAX_FILE_TOKENS * 1.5) return;
+        });
+        lastFileContent = text;
+        const truncated = lastFileContent.length > MAX_FILE_TOKENS;
+        setFileStatusOK(file.name, lastFileContent.length, truncated, "Excel (XLS/XLSX)");
+      } catch (err) {
+        console.error(err);
+        setFileStatusError("Erreur lors de la lecture du fichier Excel.");
+      }
+    };
+    reader.onerror = function() {
+      setFileStatusError("Impossible de lire le fichier Excel.");
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function gererFichier(file) {
+    if (!file) {
+      lastFileContent = null;
+      fileStatus.textContent = "Aucun fichier chargé.";
+      clearFileBtn.style.display = "none";
+      return;
+    }
+
+    const name = file.name || "";
+    const lower = name.toLowerCase();
+
+    fileStatus.textContent = "Lecture du fichier en cours...";
+    clearFileBtn.style.display = "none";
+    lastFileContent = null;
+
+    if (lower.endsWith(".txt") || lower.endsWith(".md") || lower.endsWith(".json")) {
+      lireFichierTexte(file);
+    } else if (lower.endsWith(".pdf")) {
+      lirePDF(file);
+    } else if (lower.endsWith(".docx")) {
+      lireDOCX(file);
+    } else if (lower.endsWith(".pptx") || lower.endsWith(".ppt")) {
+      lirePPTX(file);
+    } else if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
+      lireXLSX(file);
+    } else {
+      setFileStatusError("Format non supporté.");
+    }
+  }
+
+  fileInput.addEventListener("change", function() {
+    gererFichier(fileInput.files[0]);
+  });
+
+  clearFileBtn.addEventListener("click", function() {
+    fileInput.value = "";
+    gererFichier(null);
+  });
+
+  imageForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const prompt = imagePromptInput.value.trim();
+    if (!prompt) {
+      imageStatus.textContent = "Écris d'abord une description pour l'image.";
+      return;
+    }
+
+    imageStatus.textContent = "Génération en cours... (DALL-E peut prendre jusqu'à 30 secondes)";
+    imageResult.innerHTML = "";
+
+    try {
+      const url = await appelOpenAIImage(prompt);
+      imageStatus.textContent = "✅ Image générée :";
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = prompt;
+      imageResult.innerHTML = "";
+      imageResult.appendChild(img);
+    } catch (err) {
+      console.error(err);
+      imageStatus.innerHTML = `<span class="error-message">Erreur : ${err.message}</span>`;
+    }
+  });
+
+  clearChatBtn.addEventListener("click", function () {
+    if (!confirm("Voulez-vous vraiment effacer toute la conversation ?")) return;
+    historique = [];
+    localStorage.removeItem("iapant_historique_v2");
+    chat.innerHTML = "";
+    const bienvenue = "Bonjour, je suis IAPant Studio. Pose-moi une question, ou charge un fichier (PDF, Word, Excel, PowerPoint, texte) pour que je l'utilise comme contexte.";
+    ajouterMessage(bienvenue, "assistant");
+    sauverHistorique();
+  });
+
+  exportChatBtn.addEventListener("click", function () {
+    if (!historique.length) {
+      alert("Aucune conversation à exporter pour l'instant.");
+      return;
+    }
+    const lignes = historique.map(msg => {
+      const who = msg.role === "user" ? "Toi" : "IAPant";
+      return `[${who}] ${msg.text}`;
+    }).join("\n\n");
+
+    const blob = new Blob([lignes], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const dateStr = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `iapant_chat_${dateStr}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  themeToggleBtn.addEventListener("click", function () {
+    document.body.classList.toggle("light-theme");
+    const mode = document.body.classList.contains("light-theme") ? "clair" : "sombre";
+    themeToggleBtn.textContent = mode === "clair" ? "☀️" : "🌙";
+  });
+
+  modelSelect.addEventListener("change", function () {
+    CHAT_MODEL = modelSelect.value;
+    modelLabel.textContent = CHAT_MODEL;
+  });
+
+  document.addEventListener("DOMContentLoaded", function() {
+    verifierCleEtActiverControles();
+    chargerHistorique();
+  });
+</script>
+</body>
+</html>
